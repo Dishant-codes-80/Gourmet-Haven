@@ -3,16 +3,25 @@ const nodemailer = require('nodemailer');
 // Create a shared transporter with more robust configuration for deployment
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // use SSL
+  port: 587,
+  secure: false, // use STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
+  // Force IPv4 to avoid IPv6 connection issues on Render
+  family: 4,
   // Add timeouts to handle potential network lag in cloud environments
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
+  connectionTimeout: 60000, // 60 seconds
+  greetingTimeout: 60000,
+  socketTimeout: 60000,
+  // TLS configuration for better compatibility
+  tls: {
+    rejectUnauthorized: true,
+    minVersion: 'TLSv1.2'
+  },
+  logger: true, // Log to console for debugging
+  debug: true,  // Include SMTP traffic in logs
 });
 
 /**
