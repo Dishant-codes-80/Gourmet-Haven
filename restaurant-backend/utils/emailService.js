@@ -1,24 +1,23 @@
 const nodemailer = require('nodemailer');
 
 // Create a shared transporter with more robust configuration for deployment
+// Using direct IPv4 address to completely bypass IPv6 issues on Render
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: '74.125.142.109', // Gmail SMTP IPv4 address (bypasses DNS IPv6 issues)
   port: 587,
   secure: false, // use STARTTLS
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD,
   },
-  // Force IPv4 to avoid IPv6 connection issues on Render
-  family: 4,
   // Add timeouts to handle potential network lag in cloud environments
   connectionTimeout: 60000, // 60 seconds
   greetingTimeout: 60000,
   socketTimeout: 60000,
-  // TLS configuration for better compatibility
+  // TLS configuration for Gmail
   tls: {
-    rejectUnauthorized: true,
-    minVersion: 'TLSv1.2'
+    rejectUnauthorized: false, // Allow self-signed certs in production
+    servername: 'smtp.gmail.com' // Required for TLS when using IP address
   },
   logger: true, // Log to console for debugging
   debug: true,  // Include SMTP traffic in logs
