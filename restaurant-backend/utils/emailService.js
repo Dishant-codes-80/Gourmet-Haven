@@ -1,7 +1,7 @@
 const nodemailer = require("nodemailer");
 
 /**
- * Gmail SMTP transporter (Render-safe)
+ * Gmail SMTP transporter (Render-safe, IPv4 forced)
  */
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -11,16 +11,21 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD, // Gmail App Password
   },
-  connectionTimeout: 10000, // 10s
+
+  // 🔥 CRITICAL FIX FOR RENDER (force IPv4, avoid IPv6 ENETUNREACH)
+  family: 4,
+
+  connectionTimeout: 10000,
   greetingTimeout: 10000,
   socketTimeout: 10000,
+
   tls: {
     servername: "smtp.gmail.com",
   },
 });
 
-// Verify SMTP connection on startup (VERY IMPORTANT for Render logs)
-transporter.verify((err, success) => {
+// Verify SMTP connection on startup
+transporter.verify((err) => {
   if (err) {
     console.error("❌ SMTP verify failed:", err);
   } else {
@@ -70,10 +75,10 @@ const sendOrderConfirmationEmail = async (order, customerEmail) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Order email sent:", info.messageId);
+    console.log("✅ Order confirmation email sent:", info.messageId);
     return info;
   } catch (error) {
-    console.error("❌ Error sending order email:", error);
+    console.error("❌ Error sending order confirmation email:", error);
     throw error;
   }
 };
@@ -99,7 +104,7 @@ const sendReservationConfirmation = async (details) => {
         <p><strong>Time:</strong> ${time}</p>
         <p><strong>Guests:</strong> ${guests}</p>
         <p><strong>Table:</strong> ${table || "Assigned on arrival"}</p>
-        <p><strong>Token:</strong> ${token}</p>
+        <p><strong>Booking Token:</strong> ${token}</p>
 
         <hr />
         <p style="font-size:12px;color:#777;">
@@ -111,10 +116,10 @@ const sendReservationConfirmation = async (details) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ Reservation email sent:", info.messageId);
+    console.log("✅ Reservation confirmation email sent:", info.messageId);
     return { success: true, messageId: info.messageId };
   } catch (error) {
-    console.error("❌ Error sending reservation email:", error);
+    console.error("❌ Error sending reservation confirmation email:", error);
     return { success: false, error: error.message };
   }
 };
